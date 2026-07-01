@@ -8,16 +8,16 @@ set -e
 PREFIX="${PREFIX:-$HOME/.config/opencode/tools}"
 SRC_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-if [ ! -f "$SRC_DIR/tls_fetch.ts" ]; then
-    echo "error: tls_fetch.ts not found in $SRC_DIR" >&2
+if [ ! -f "$SRC_DIR/WebFetch (anti-bot-block).ts" ]; then
+    echo "error: tool .ts file not found in $SRC_DIR" >&2
     exit 1
 fi
 
 mkdir -p "$PREFIX"
 
-install -m 0644 "$SRC_DIR/tls_fetch.ts"          "$PREFIX/tls_fetch.ts"
-install -m 0755 "$SRC_DIR/tls_fetch.py"           "$PREFIX/tls_fetch.py"
-install -m 0644 "$SRC_DIR/requirements.txt"       "$PREFIX/requirements.txt"
+install -m 0644 "$SRC_DIR/WebFetch (anti-bot-block).ts"  "$PREFIX/WebFetch (anti-bot-block).ts"
+install -m 0755 "$SRC_DIR/tls_fetch.py"                  "$PREFIX/tls_fetch.py"
+install -m 0644 "$SRC_DIR/requirements.txt"              "$PREFIX/requirements.txt"
 
 echo "Installed tls_fetch tool to: $PREFIX"
 echo ""

@@ -1,10 +1,10 @@
-# opencode-tls-fetch
+# opencode-anti-bot-block
 
 A [custom tool](https://opencode.ai/docs/custom-tools) for [opencode](https://opencode.ai) that fetches URLs using **browser TLS fingerprint impersonation** via [curl_cffi](https://github.com/lexiforest/curl_cffi).
 
 When a website blocks standard HTTP clients (bot detection, Cloudflare, DataDome, Akamai, etc.), the TLS/JA3 fingerprint of the client is one signal used to identify and block automation. `curl_cffi` impersonates real browser TLS and HTTP/2 fingerprints, so requests look like they come from Chrome, Firefox, or Safari.
 
-This lets opencode's AI fetch content from sites that its built-in `webfetch` tool can't reach.
+This gives opencode's AI a tool called **`WebFetch (anti-bot-block)`** for reaching sites that its built-in `webfetch` tool can't.
 
 ---
 
@@ -20,12 +20,12 @@ This lets opencode's AI fetch content from sites that its built-in `webfetch` to
 ### Install
 
 ```sh
-git clone https://github.com/<you>/opencode-tls-fetch.git
-cd opencode-tls-fetch
+git clone https://github.com/BubbatheVTOG/opencode-anti-bot-block.git
+cd opencode-anti-bot-block
 ./install.sh
 ```
 
-This copies `tls_fetch.ts`, `tls_fetch.py`, and `requirements.txt` into `~/.config/opencode/tools/` using the `install` command. The tool is auto-loaded by opencode on next startup — no config edits needed.
+This copies `WebFetch (anti-bot-block).ts`, `tls_fetch.py`, and `requirements.txt` into `~/.config/opencode/tools/` using the `install` command. The tool is auto-loaded by opencode on next startup — no config edits needed.
 
 To update after a `git pull`, just re-run `./install.sh`.
 
@@ -38,17 +38,17 @@ PREFIX=./.opencode/tools ./install.sh
 ### Verify it loaded
 
 ```sh
-opencode run --auto "List the tools available to you that contain 'tls' in the name"
+opencode run --dangerously-skip-permissions "List the tools available to you. Tell me if you see a tool with 'anti-bot' in the name."
 ```
 
-You should see `tls_fetch` listed. The first real call auto-creates the curl_cffi venv (one-time, ~10–60s depending on network).
+You should see `WebFetch (anti-bot-block)` listed. The first real call auto-creates the curl_cffi venv (one-time, ~10–60s depending on network).
 
 ---
 
 ## How it works
 
-1. The AI calls the `tls_fetch` tool with a URL and options.
-2. `tls_fetch.ts` lazily creates an isolated venv at `~/.local/share/opencode/tls-impersonation/venv` and installs `curl_cffi` (only on first use).
+1. The AI calls the `WebFetch (anti-bot-block)` tool with a URL and options.
+2. The tool definition lazily creates an isolated venv at `~/.local/share/opencode/tls-impersonation/venv` and installs `curl_cffi` (only on first use).
 3. It spawns `tls_fetch.py` (bundled Python script) as a subprocess, passing the request as JSON on stdin.
 4. The Python script uses `curl_cffi.requests` with the chosen browser fingerprint, and emits a JSON response on stdout.
 5. The tool returns the status, headers, and body to the AI. Large bodies are truncated (default 10k chars) to avoid context bloat.
@@ -110,7 +110,7 @@ For non-browser targets, pass a custom `ja3` and/or `ja4r` string instead of `im
 ### Basic GET with Chrome fingerprint
 
 ```
-tls_fetch({ url: "https://tls.browserleaks.com/json", impersonate: "chrome" })
+WebFetch (anti-bot-block)({ url: "https://tls.browserleaks.com/json", impersonate: "chrome" })
 ```
 
 The `ja3n_hash` in the response should match a real Chrome client — that's the impersonation working.
@@ -118,7 +118,7 @@ The `ja3n_hash` in the response should match a real Chrome client — that's the
 ### POST with body and headers
 
 ```
-tls_fetch({
+WebFetch (anti-bot-block)({
   url: "https://httpbin.org/post",
   method: "post",
   headers: { "Content-Type": "application/json" },
@@ -130,19 +130,19 @@ tls_fetch({
 ### Through a SOCKS5 proxy
 
 ```
-tls_fetch({ url: "https://example.com", proxy: "socks5://localhost:1080" })
+WebFetch (anti-bot-block)({ url: "https://example.com", proxy: "socks5://localhost:1080" })
 ```
 
 ### HTTP/3 (opt-in, needs UDP egress)
 
 ```
-tls_fetch({ url: "https://fp.impersonate.pro/api/http3", http_version: "v3", impersonate: "chrome" })
+WebFetch (anti-bot-block)({ url: "https://fp.impersonate.pro/api/http3", http_version: "v3", impersonate: "chrome" })
 ```
 
 ### Save large response to disk
 
 ```
-tls_fetch({ url: "https://example.com/big.html", output_file: "/tmp/big.html" })
+WebFetch (anti-bot-block)({ url: "https://example.com/big.html", output_file: "/tmp/big.html" })
 ```
 
 The tool returns a note that the body was written to disk, keeping the AI's context lean.
@@ -154,19 +154,19 @@ The tool returns a note that the body was written to disk, keeping the AI's cont
 The tool uses opencode's permission system. By default it prompts once per session (per URL) via `context.ask()`. To always allow it without prompting, add to your `opencode.json`:
 
 ```json
-{ "permission": { "tls_fetch": "allow" } }
+{ "permission": { "WebFetch (anti-bot-block)": "allow" } }
 ```
 
 To require approval every call:
 
 ```json
-{ "permission": { "tls_fetch": "ask" } }
+{ "permission": { "WebFetch (anti-bot-block)": "ask" } }
 ```
 
 To disable it entirely:
 
 ```json
-{ "permission": { "tls_fetch": "deny" } }
+{ "permission": { "WebFetch (anti-bot-block)": "deny" } }
 ```
 
 See the [permissions docs](https://opencode.ai/docs/permissions) for details.
@@ -175,10 +175,10 @@ See the [permissions docs](https://opencode.ai/docs/permissions) for details.
 
 ## Testing
 
-To exercise the tool from the CLI (non-interactive), use `opencode run` with `--auto` to auto-approve the permission prompt:
+To exercise the tool from the CLI (non-interactive), use `opencode run` with `--dangerously-skip-permissions` to auto-approve the permission prompt:
 
 ```sh
-opencode run --auto "Use the tls_fetch tool to fetch https://tls.browserleaks.com/json with the chrome fingerprint and tell me the ja3n_hash value"
+opencode run --dangerously-skip-permissions "Use the WebFetch (anti-bot-block) tool to fetch https://tls.browserleaks.com/json with the chrome fingerprint and tell me the ja3n_hash value"
 ```
 
 To test the Python script directly (bypassing opencode):
@@ -192,7 +192,7 @@ echo '{"url":"https://tls.browserleaks.com/json","impersonate":"chrome","method"
 
 ## Troubleshooting
 
-### "tls_fetch subprocess exited 1" / curl_cffi not installed
+### Tool subprocess exited non-zero / curl_cffi not installed
 
 The venv auto-creation may have failed (no network, wrong Python version). Create it manually:
 
@@ -216,7 +216,7 @@ HTTP/3 uses QUIC over UDP. Many corporate networks and containers block UDP egre
 
 ### Permission denied / tool not found
 
-Make sure `~/.config/opencode/tools/tls_fetch.ts` exists after running `./install.sh`. opencode loads custom tools from that directory at startup — restart opencode if you installed it while a session was running.
+Make sure `~/.config/opencode/tools/WebFetch (anti-bot-block).ts` exists after running `./install.sh`. opencode loads custom tools from that directory at startup — restart opencode if you installed it while a session was running.
 
 ### Fingerprints seem stale
 
@@ -230,12 +230,12 @@ Browser presets ship with curl_cffi. Run `curl-cffi update` (in the venv) to fet
 
 ## Files
 
-| File              | Purpose                                                          |
-| ----------------- | ---------------------------------------------------------------- |
-| `tls_fetch.ts`    | Tool definition (opencode custom tool). Spawns Python, shapes response. |
-| `tls_fetch.py`    | Python script. Uses `curl_cffi.requests`, stdin JSON → stdout JSON. |
-| `requirements.txt`| Pins `curl_cffi` version for the venv.                            |
-| `install.sh`      | Copies the above into `~/.config/opencode/tools/` via `install`.  |
+| File                          | Purpose                                                          |
+| ----------------------------- | ---------------------------------------------------------------- |
+| `WebFetch (anti-bot-block).ts`| Tool definition (opencode custom tool). Spawns Python, shapes response. |
+| `tls_fetch.py`                | Python script. Uses `curl_cffi.requests`, stdin JSON → stdout JSON. |
+| `requirements.txt`            | Pins `curl_cffi` version for the venv.                            |
+| `install.sh`                  | Copies the above into `~/.config/opencode/tools/` via `install`.  |
 
 ---
 
